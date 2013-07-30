@@ -19,6 +19,10 @@ describe "Authentication" do
 
       it { should have_title('Sign in') }
       it { should have_error_message('Invalid') }
+      it { should_not have_link('Users',       href: users_path) }
+      it { should_not have_link 'Profile' }
+      it { should_not have_link 'Settings' }
+      it { should_not have_link 'Sign out' }
 
       describe "after visting another page" do
         before { click_link "Home" }
@@ -46,15 +50,37 @@ describe "Authentication" do
 
   describe "authorization" do
 
+    describe "for signed-in users" do
+      let(:user) { FactoryGirl.create(:user) }
+
+      describe "when attempting to visit new action" do
+        before do
+          sign_in user
+          visit signup_path
+        end
+        it { should have_content('home page') }
+        it { should_not have_title(full_title('Sign up')) }
+      end
+
+      describe "when attempting to submit create action" do
+        let(:params) do
+          { user: { name: user.name, email: user.email, password: user.password, password_confirmation: user.password } }
+        end
+        before do
+          sign_in user, no_capybara: true
+          post users_path(user), params
+        end
+        specify { expect(response).to redirect_to(root_path) }
+      end
+    end
+
     describe "for non-signed-in users" do
       let(:user) { FactoryGirl.create(:user) }
 
       describe "when attempting to visit a protected page" do
         before do
           visit edit_user_path(user)
-          fill_in "Email",    with: user.email
-          fill_in "Password", with: user.password
-          click_button "Sign in"
+          sign_in(user)
         end
 
         describe "after signing in" do
