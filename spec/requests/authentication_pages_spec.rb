@@ -58,7 +58,7 @@ describe "Authentication" do
           sign_in user
           visit signup_path
         end
-        it { should have_content('home page') }
+        it { should have_content('view my profile') }
         it { should_not have_title(full_title('Sign up')) }
       end
 
@@ -99,6 +99,19 @@ describe "Authentication" do
               expect(page).to have_title(user.name)
             end
           end
+        end
+      end
+
+      describe "in the Microposts controller" do
+
+        describe "submitting to the create action" do
+          before { post microposts_path }
+          specify { expect(response).to redirect_to(signin_path) }
+        end
+
+        describe "submitting to the destroy action" do
+          before { delete micropost_path(FactoryGirl.create(:micropost)) }
+          specify { expect(response).to redirect_to(signin_path) }
         end
       end
 
